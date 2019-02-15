@@ -1,5 +1,5 @@
 {
-  "include": ["src"],
+  "include": ["src", "e2e"],
   "exclude": ["node_modules"],
   "compilerOptions": {
     /* Basic Options */
