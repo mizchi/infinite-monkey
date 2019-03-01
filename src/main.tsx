@@ -1,6 +1,6 @@
 import "./pre";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import {
   BrowserRouter,
@@ -9,6 +9,7 @@ import {
   Link,
   RouteComponentProps
 } from "react-router-dom";
+import { GPGPUPlayground } from "./GLPlayground";
 
 const range = (n: number) => [...new Array(n).keys()];
 
@@ -16,6 +17,10 @@ const HEADER_LINKS: { name: string; path: string }[] = [
   {
     name: "Index",
     path: "/"
+  },
+  {
+    name: "gl",
+    path: "/gl"
   },
   {
     name: "About",
@@ -46,6 +51,12 @@ const ITEMS: { id: string; title: string; body: string }[] = range(100).map(
 );
 
 function Header() {
+  // useEffect(() => {
+  //   console.log("header");
+  //   if (Math.random() < 0.3) {
+  //     throw new Error(`Header throw async error 5%`);
+  //   }
+  // }, []);
   return (
     <header>
       {HEADER_LINKS.map(link => {
@@ -82,9 +93,33 @@ function Form() {
         <div>done</div>
       ) : (
         <form action="/" method="get" onSubmit={onSubmit}>
-          <input type="text" defaultValue="aaa" />
-          <input type="text" />
-          <input type="number" defaultValue="0" />
+          <div>
+            <input type="text" defaultValue="aaa" />
+          </div>
+          <div>
+            <input type="text" />
+          </div>
+          <div>
+            <textarea />
+          </div>
+          <div>
+            <input type="number" defaultValue="0" />
+          </div>
+          <div>
+            a: <input type="radio" />
+            b: <input type="radio" />
+            c: <input type="radio" />
+            d: <input type="radio" />
+          </div>
+          <div>
+            <select>
+              <option value="a">a</option>
+              <option value="b">b</option>
+              <option value="c">c</option>
+            </select>
+          </div>
+
+          <hr />
           <input type="submit" />
         </form>
       )}
@@ -138,6 +173,7 @@ function Item(props: RouteComponentProps<{ id: string }>) {
   const item = ITEMS.find(item => {
     return item.id === id;
   });
+  console.log("show-item", id);
   if (item) {
     return (
       <div>
@@ -157,6 +193,7 @@ function App() {
         <Header />
         <Switch>
           <Route exact path="/" component={Index} />
+          <Route exact path="/gl" component={GPGPUPlayground} />
           <Route exact path="/about" component={About} />
           <Route exact path="/items" component={ItemList} />
           <Route exact path="/counter" component={Counter} />
@@ -169,42 +206,3 @@ function App() {
 }
 
 ReactDOM.render(<App />, document.querySelector(".root"));
-
-function pathsToSelector(paths: number[], root = "body") {
-  return paths.reduce(
-    (expr, next) => `${expr} > *:nth-child(${next + 1})`,
-    root
-  );
-}
-
-// function walk() {
-//   const ret: [string, object, number[]][] = [];
-//   function _walk(node: HTMLElement, paths: number[]) {
-//     const attrs = Array.from(node.attributes).reduce(
-//       (acc, attr) => ({ ...acc, [attr.nodeName]: attr.value }),
-//       {}
-//     );
-
-//     ret.push([node.tagName.toLowerCase(), attrs, paths]);
-
-//     if (node.childNodes && node.childNodes.length > 0) {
-//       Array.from(node.childNodes)
-//         // Drop Text Node
-//         .filter(n => n instanceof HTMLElement)
-//         .map((child, index) => {
-//           _walk(child as HTMLElement, paths.concat([index]));
-//         });
-//     }
-//   }
-
-//   _walk(document.body, []);
-//   ret.forEach(([tag, attrs, paths]) => {
-//     const selector = pathsToSelector(paths);
-//     console.log(tag, paths, attrs, document.querySelector(selector));
-//   });
-// }
-
-// setTimeout(() => {
-//   // console.log("walk");
-//   walk();
-// }, 1000);

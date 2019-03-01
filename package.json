@@ -33,6 +33,7 @@
     "axios": "^0.18.0",
     "error-stack-parser": "^2.0.2",
     "lodash": "^4.17.11",
+    "pngjs": "^3.3.3",
     "react": "^16.8.1",
     "react-dom": "^16.8.1",
     "react-redux": "^6.0.0",

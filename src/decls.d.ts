@@ -1,3 +1,5 @@
 /* === Ignore === */
 
-// declare module "lib-name";
+declare module "pngjs" {
+  export var PNG: any;
+}
