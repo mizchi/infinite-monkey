@@ -80,7 +80,7 @@ function antialiased(
   const y0 = Math.max(y1 - 1, 0);
   const x2 = Math.min(x1 + 1, width - 1);
   const y2 = Math.min(y1 + 1, height - 1);
-  const pos = (y1 * width + x1) * 4;
+  const pos = (y1 * width + x1) * 4; // rgba offset
   let zeroes: number = x1 === x0 || x1 === x2 || y1 === y0 || y1 === y2 ? 1 : 0;
   let min = 0;
   let max = 0;

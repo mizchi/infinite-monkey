@@ -1,330 +1,330 @@
-// canvasを作ってDOMに追加する
-const canvas = document.createElement("canvas");
-canvas.width = 500;
-canvas.height = 500;
-document.body.appendChild(canvas);
+// // canvasを作ってDOMに追加する
+// const canvas = document.createElement("canvas");
+// canvas.width = 500;
+// canvas.height = 500;
+// document.body.appendChild(canvas);
 
-// WebGL2のコンテキストを取得する
-const gl = canvas.getContext("webgl2") as WebGL2RenderingContext;
+// // WebGL2のコンテキストを取得する
+// const gl = canvas.getContext("webgl2") as WebGL2RenderingContext;
 
-const updaterVertexShaderSource: string = `#version 300 es
-uniform vec2 origin;
-uniform float elapsedTimeDelta;
+// const updaterVertexShaderSource: string = `#version 300 es
+// uniform vec2 origin;
+// uniform float elapsedTimeDelta;
 
-in vec2 particlePosition;
-in vec2 particleVelocity;
-in float particleAge;
-in float particleLife;
-
-out vec2 vertexPosition;
-out vec2 vertexVelocity;
-out float vertexAge;
-out float vertexLife;
-
-void main() {
-  if(particleAge > particleLife) {
-    // 寿命を超えたら元の場所に戻す
-    vertexPosition = origin;
-    vertexVelocity = particleVelocity;
-    vertexAge = 0.0;
-    vertexLife = particleLife;
-  } else {
-    // 超えてなければ更新する
-    vertexPosition = particlePosition + (particleVelocity * elapsedTimeDelta);
-    vertexVelocity = particleVelocity;
-    vertexAge = particleAge + elapsedTimeDelta;
-    vertexLife = particleLife;
-  }
-}
-`;
-
-const updaterFragmentShaderSource = `#version 300 es
-precision highp float;
-
-void main() {
-  discard;
-}
-`;
-
-// const rendererVertexShaderSource = `#version 300 es
 // in vec2 particlePosition;
+// in vec2 particleVelocity;
+// in float particleAge;
+// in float particleLife;
+
+// out vec2 vertexPosition;
+// out vec2 vertexVelocity;
+// out float vertexAge;
+// out float vertexLife;
 
 // void main() {
-//   gl_PointSize = 2.0;
-//   gl_Position = vec4(particlePosition, 0.0, 1.0);
+//   if(particleAge > particleLife) {
+//     // 寿命を超えたら元の場所に戻す
+//     vertexPosition = origin;
+//     vertexVelocity = particleVelocity;
+//     vertexAge = 0.0;
+//     vertexLife = particleLife;
+//   } else {
+//     // 超えてなければ更新する
+//     vertexPosition = particlePosition + (particleVelocity * elapsedTimeDelta);
+//     vertexVelocity = particleVelocity;
+//     vertexAge = particleAge + elapsedTimeDelta;
+//     vertexLife = particleLife;
+//   }
 // }
 // `;
 
-// const rendererFragmentShaderSource = `#version 300 es
+// const updaterFragmentShaderSource = `#version 300 es
 // precision highp float;
 
-// out vec4 fragColor;
-
 // void main() {
-//   fragColor = vec4(1.0); // 白色
+//   discard;
 // }
 // `;
 
-// プログラムをリンクして返す関数
-function createProgram(
-  vsSource: string,
-  fsSource: string,
-  feedbackVariables: string[] = []
-) {
-  // シェーダをコンパイルする
-  const vertexShader = gl.createShader(gl.VERTEX_SHADER) as WebGLShader;
-  gl.shaderSource(vertexShader, vsSource);
-  gl.compileShader(vertexShader);
+// // const rendererVertexShaderSource = `#version 300 es
+// // in vec2 particlePosition;
 
-  const vShaderCompileStatus = gl.getShaderParameter(
-    vertexShader,
-    gl.COMPILE_STATUS
-  );
-  if (!vShaderCompileStatus) {
-    const info = gl.getShaderInfoLog(vertexShader);
-    console.log(info);
-  }
+// // void main() {
+// //   gl_PointSize = 2.0;
+// //   gl_Position = vec4(particlePosition, 0.0, 1.0);
+// // }
+// // `;
 
-  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER) as WebGLShader;
-  gl.shaderSource(fragmentShader, fsSource);
-  gl.compileShader(fragmentShader);
+// // const rendererFragmentShaderSource = `#version 300 es
+// // precision highp float;
 
-  const fShaderCompileStatus = gl.getShaderParameter(
-    fragmentShader,
-    gl.COMPILE_STATUS
-  );
-  if (!fShaderCompileStatus) {
-    const info = gl.getShaderInfoLog(fragmentShader);
-    console.log(info);
-  }
+// // out vec4 fragColor;
 
-  // シェーダプログラムの作成
-  const program = gl.createProgram() as WebGLProgram;
-  gl.attachShader(program, vertexShader);
-  gl.attachShader(program, fragmentShader);
-  // 書き出す変数
-  if (feedbackVariables.length !== 0) {
-    gl.transformFeedbackVaryings(
-      program,
-      feedbackVariables,
-      gl.INTERLEAVED_ATTRIBS
-    );
-  }
+// // void main() {
+// //   fragColor = vec4(1.0); // 白色
+// // }
+// // `;
 
-  gl.linkProgram(program);
+// // プログラムをリンクして返す関数
+// function createProgram(
+//   vsSource: string,
+//   fsSource: string,
+//   feedbackVariables: string[] = []
+// ) {
+//   // シェーダをコンパイルする
+//   const vertexShader = gl.createShader(gl.VERTEX_SHADER) as WebGLShader;
+//   gl.shaderSource(vertexShader, vsSource);
+//   gl.compileShader(vertexShader);
 
-  // リンクできたかどうかを確認
-  const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
-  if (!linkStatus) {
-    const info = gl.getProgramInfoLog(program);
-    console.log(info);
-  }
+//   const vShaderCompileStatus = gl.getShaderParameter(
+//     vertexShader,
+//     gl.COMPILE_STATUS
+//   );
+//   if (!vShaderCompileStatus) {
+//     const info = gl.getShaderInfoLog(vertexShader);
+//     console.log(info);
+//   }
 
-  return program;
-}
+//   const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER) as WebGLShader;
+//   gl.shaderSource(fragmentShader, fsSource);
+//   gl.compileShader(fragmentShader);
 
-// Vertex Array Objectを作成する関数
-function createVAO(
-  program: WebGLProgram,
-  buffer: WebGLBuffer,
-  attributes: Array<{
-    name: string;
-    size: number;
-    type: number;
-    byteSize: number;
-  }>,
-  stride: number,
-  data: Float32Array | null = null,
-  usage: any = gl.STATIC_DRAW
-): WebGLVertexArrayObject {
-  const vao = gl.createVertexArray();
-  gl.bindVertexArray(vao);
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+//   const fShaderCompileStatus = gl.getShaderParameter(
+//     fragmentShader,
+//     gl.COMPILE_STATUS
+//   );
+//   if (!fShaderCompileStatus) {
+//     const info = gl.getShaderInfoLog(fragmentShader);
+//     console.log(info);
+//   }
 
-  let offset = 0;
-  for (const attr of attributes) {
-    const attrLocation = gl.getAttribLocation(program, attr.name);
-    gl.enableVertexAttribArray(attrLocation);
-    gl.vertexAttribPointer(
-      attrLocation,
-      attr.size,
-      attr.type,
-      false,
-      stride,
-      offset
-    );
-    offset += attr.byteSize;
-  }
+//   // シェーダプログラムの作成
+//   const program = gl.createProgram() as WebGLProgram;
+//   gl.attachShader(program, vertexShader);
+//   gl.attachShader(program, fragmentShader);
+//   // 書き出す変数
+//   if (feedbackVariables.length !== 0) {
+//     gl.transformFeedbackVaryings(
+//       program,
+//       feedbackVariables,
+//       gl.INTERLEAVED_ATTRIBS
+//     );
+//   }
 
-  if (data !== null) {
-    gl.bufferData(gl.ARRAY_BUFFER, data, usage);
-  }
+//   gl.linkProgram(program);
 
-  gl.bindVertexArray(null);
-  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+//   // リンクできたかどうかを確認
+//   const linkStatus = gl.getProgramParameter(program, gl.LINK_STATUS);
+//   if (!linkStatus) {
+//     const info = gl.getProgramInfoLog(program);
+//     console.log(info);
+//   }
 
-  return vao as WebGLVertexArrayObject;
-}
+//   return program;
+// }
 
-// メイン関数
-(function main() {
-  const PARTICLE_NUM = 1000; // パーティクルの数
-  const MAX_SPEED = 0.001; // パーティクルの最大速度
-  const MAX_LIFE = 1000.0; // パーティクルの最大寿命
-  const originPoint = new Float32Array([0.0, 0.0]); // 原点
+// // Vertex Array Objectを作成する関数
+// function createVAO(
+//   program: WebGLProgram,
+//   buffer: WebGLBuffer,
+//   attributes: Array<{
+//     name: string;
+//     size: number;
+//     type: number;
+//     byteSize: number;
+//   }>,
+//   stride: number,
+//   data: Float32Array | null = null,
+//   usage: any = gl.STATIC_DRAW
+// ): WebGLVertexArrayObject {
+//   const vao = gl.createVertexArray();
+//   gl.bindVertexArray(vao);
+//   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
-  // マウスポインタの場所をパーティクル発生の原点にする
-  canvas.addEventListener("mousemove", mEvent => {
-    originPoint[0] = -1.0 + (mEvent.clientX / canvas.width) * 2;
-    originPoint[1] = 1.0 - (mEvent.clientY / canvas.height) * 2;
-  });
+//   let offset = 0;
+//   for (const attr of attributes) {
+//     const attrLocation = gl.getAttribLocation(program, attr.name);
+//     gl.enableVertexAttribArray(attrLocation);
+//     gl.vertexAttribPointer(
+//       attrLocation,
+//       attr.size,
+//       attr.type,
+//       false,
+//       stride,
+//       offset
+//     );
+//     offset += attr.byteSize;
+//   }
 
-  // 書き戻す変数
-  const feedbackVariables = [
-    "vertexPosition",
-    "vertexVelocity",
-    "vertexAge",
-    "vertexLife"
-  ];
+//   if (data !== null) {
+//     gl.bufferData(gl.ARRAY_BUFFER, data, usage);
+//   }
 
-  // Update用のプログラムとRender用のプログラムを作成する
-  const updaterProgram = createProgram(
-    updaterVertexShaderSource,
-    updaterFragmentShaderSource,
-    feedbackVariables
-  );
-  // const rendererProgram = createProgram(
-  //   rendererVertexShaderSource,
-  //   rendererFragmentShaderSource
-  // );
+//   gl.bindVertexArray(null);
+//   gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-  // バッファの初期化時に黒で初期化するようにする
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
-  // パーティクルの初期データを用意する
-  const particleInitialData = [];
-  for (let i = 0; i < PARTICLE_NUM; i++) {
-    // 初期xy座標
-    particleInitialData.push(originPoint[0]);
-    particleInitialData.push(originPoint[1]);
+//   return vao as WebGLVertexArrayObject;
+// }
 
-    // 速度（-MAX_SPEEDから+MAX_SPEEDまでの間）
-    const vx = -MAX_SPEED + Math.random() * (MAX_SPEED * 2);
-    const vy = -MAX_SPEED + Math.random() * (MAX_SPEED * 2);
-    particleInitialData.push(vx);
-    particleInitialData.push(vy);
+// // メイン関数
+// (function main() {
+//   const PARTICLE_NUM = 1000; // パーティクルの数
+//   const MAX_SPEED = 0.001; // パーティクルの最大速度
+//   const MAX_LIFE = 1000.0; // パーティクルの最大寿命
+//   const originPoint = new Float32Array([0.0, 0.0]); // 原点
 
-    // 年齢
-    particleInitialData.push(0.0);
+//   // マウスポインタの場所をパーティクル発生の原点にする
+//   canvas.addEventListener("mousemove", mEvent => {
+//     originPoint[0] = -1.0 + (mEvent.clientX / canvas.width) * 2;
+//     originPoint[1] = 1.0 - (mEvent.clientY / canvas.height) * 2;
+//   });
 
-    // 寿命
-    const life = Math.random() * MAX_LIFE;
-    particleInitialData.push(life);
-  }
+//   // 書き戻す変数
+//   const feedbackVariables = [
+//     "vertexPosition",
+//     "vertexVelocity",
+//     "vertexAge",
+//     "vertexLife"
+//   ];
 
-  const particleInitialDataF32 = new Float32Array(particleInitialData);
+//   // Update用のプログラムとRender用のプログラムを作成する
+//   const updaterProgram = createProgram(
+//     updaterVertexShaderSource,
+//     updaterFragmentShaderSource,
+//     feedbackVariables
+//   );
+//   // const rendererProgram = createProgram(
+//   //   rendererVertexShaderSource,
+//   //   rendererFragmentShaderSource
+//   // );
 
-  // 各VAOを作成する
-  // [input, output] * [Update, Render] の計4つ
+//   // バッファの初期化時に黒で初期化するようにする
+//   gl.clearColor(0.0, 0.0, 0.0, 1.0);
+//   // パーティクルの初期データを用意する
+//   const particleInitialData = [];
+//   for (let i = 0; i < PARTICLE_NUM; i++) {
+//     // 初期xy座標
+//     particleInitialData.push(originPoint[0]);
+//     particleInitialData.push(originPoint[1]);
 
-  // 入力用のバッファと出力用のバッファ
-  const inputBuffer = gl.createBuffer() as WebGLBuffer;
-  const outputBuffer = gl.createBuffer() as WebGLBuffer;
+//     // 速度（-MAX_SPEEDから+MAX_SPEEDまでの間）
+//     const vx = -MAX_SPEED + Math.random() * (MAX_SPEED * 2);
+//     const vy = -MAX_SPEED + Math.random() * (MAX_SPEED * 2);
+//     particleInitialData.push(vx);
+//     particleInitialData.push(vy);
 
-  const updaterAttributes: Array<{
-    name: string;
-    size: number;
-    type: number;
-    byteSize: number;
-  }> = [
-    {
-      name: "particlePosition",
-      size: 2,
-      type: gl.FLOAT,
-      byteSize: 2 * Float32Array.BYTES_PER_ELEMENT
-    },
-    {
-      name: "particleVelocity",
-      size: 2,
-      type: gl.FLOAT,
-      byteSize: 2 * Float32Array.BYTES_PER_ELEMENT
-    },
-    {
-      name: "particleAge",
-      size: 1,
-      type: gl.FLOAT,
-      byteSize: 1 * Float32Array.BYTES_PER_ELEMENT
-    },
-    {
-      name: "particleLife",
-      size: 1,
-      type: gl.FLOAT,
-      byteSize: 1 * Float32Array.BYTES_PER_ELEMENT
-    }
-  ];
+//     // 年齢
+//     particleInitialData.push(0.0);
 
-  const STRIDE = updaterAttributes.reduce(
-    (prev, current) => prev + current.byteSize,
-    0
-  );
+//     // 寿命
+//     const life = Math.random() * MAX_LIFE;
+//     particleInitialData.push(life);
+//   }
 
-  const inputBufferUpdateVAO = createVAO(
-    updaterProgram,
-    inputBuffer,
-    updaterAttributes,
-    STRIDE,
-    particleInitialDataF32,
-    gl.DYNAMIC_COPY
-  );
+//   const particleInitialDataF32 = new Float32Array(particleInitialData);
 
-  const transformFeedback = gl.createTransformFeedback();
-  gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transformFeedback);
-  const elapsedTime = 16;
+//   // 各VAOを作成する
+//   // [input, output] * [Update, Render] の計4つ
 
-  // カラーバッファをクリアする
-  // gl.clear(gl.COLOR_BUFFER_BIT);
+//   // 入力用のバッファと出力用のバッファ
+//   const inputBuffer = gl.createBuffer() as WebGLBuffer;
+//   const outputBuffer = gl.createBuffer() as WebGLBuffer;
 
-  // 計算用のプログラムを使用する
-  gl.useProgram(updaterProgram);
+//   const updaterAttributes: Array<{
+//     name: string;
+//     size: number;
+//     type: number;
+//     byteSize: number;
+//   }> = [
+//     {
+//       name: "particlePosition",
+//       size: 2,
+//       type: gl.FLOAT,
+//       byteSize: 2 * Float32Array.BYTES_PER_ELEMENT
+//     },
+//     {
+//       name: "particleVelocity",
+//       size: 2,
+//       type: gl.FLOAT,
+//       byteSize: 2 * Float32Array.BYTES_PER_ELEMENT
+//     },
+//     {
+//       name: "particleAge",
+//       size: 1,
+//       type: gl.FLOAT,
+//       byteSize: 1 * Float32Array.BYTES_PER_ELEMENT
+//     },
+//     {
+//       name: "particleLife",
+//       size: 1,
+//       type: gl.FLOAT,
+//       byteSize: 1 * Float32Array.BYTES_PER_ELEMENT
+//     }
+//   ];
 
-  // uniform変数をセットする
-  gl.uniform2fv(gl.getUniformLocation(updaterProgram, "origin"), originPoint);
-  gl.uniform1f(
-    gl.getUniformLocation(updaterProgram, "elapsedTimeDelta"),
-    elapsedTime
-  );
+//   const STRIDE = updaterAttributes.reduce(
+//     (prev, current) => prev + current.byteSize,
+//     0
+//   );
 
-  // ラスタライザを無効化
-  gl.enable(gl.RASTERIZER_DISCARD);
+//   const inputBufferUpdateVAO = createVAO(
+//     updaterProgram,
+//     inputBuffer,
+//     updaterAttributes,
+//     STRIDE,
+//     particleInitialDataF32,
+//     gl.DYNAMIC_COPY
+//   );
 
-  // 計算してフィードバックする
-  gl.bindVertexArray(inputBufferUpdateVAO);
-  gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, outputBuffer);
+//   const transformFeedback = gl.createTransformFeedback();
+//   gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transformFeedback);
+//   const elapsedTime = 16;
 
-  gl.beginTransformFeedback(gl.POINTS);
-  gl.drawArrays(gl.POINTS, 0, PARTICLE_NUM); // PARTICLE_NUM個の計算をする
-  gl.endTransformFeedback();
+//   // カラーバッファをクリアする
+//   // gl.clear(gl.COLOR_BUFFER_BIT);
 
-  // バインド解除
-  gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
+//   // 計算用のプログラムを使用する
+//   gl.useProgram(updaterProgram);
 
-  console.log("output", outputBuffer);
+//   // uniform変数をセットする
+//   gl.uniform2fv(gl.getUniformLocation(updaterProgram, "origin"), originPoint);
+//   gl.uniform1f(
+//     gl.getUniformLocation(updaterProgram, "elapsedTimeDelta"),
+//     elapsedTime
+//   );
 
-  // // ラスタライザの再有効化
-  // gl.disable(gl.RASTERIZER_DISCARD);
+//   // ラスタライザを無効化
+//   gl.enable(gl.RASTERIZER_DISCARD);
 
-  // // 描画用のプログラムを使用する
-  // gl.useProgram(rendererProgram);
-  // gl.bindVertexArray(renderVAOs[outputIndex]);
-  // gl.drawArrays(gl.POINTS, 0, PARTICLE_NUM);
+//   // 計算してフィードバックする
+//   gl.bindVertexArray(inputBufferUpdateVAO);
+//   gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, outputBuffer);
 
-  // // swap
-  // [inputIndex, outputIndex] = [outputIndex, inputIndex];
+//   gl.beginTransformFeedback(gl.POINTS);
+//   gl.drawArrays(gl.POINTS, 0, PARTICLE_NUM); // PARTICLE_NUM個の計算をする
+//   gl.endTransformFeedback();
 
-  // // 繰り返す
-  // prevTimeMs = timestampMs;
-  // requestAnimationFrame(ts => loop(ts));
-  // }
+//   // バインド解除
+//   gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
 
-  // ループ開始
-  // requestAnimationFrame(ts => loop(ts));
-})();
+//   console.log("output", outputBuffer);
+
+//   // // ラスタライザの再有効化
+//   // gl.disable(gl.RASTERIZER_DISCARD);
+
+//   // // 描画用のプログラムを使用する
+//   // gl.useProgram(rendererProgram);
+//   // gl.bindVertexArray(renderVAOs[outputIndex]);
+//   // gl.drawArrays(gl.POINTS, 0, PARTICLE_NUM);
+
+//   // // swap
+//   // [inputIndex, outputIndex] = [outputIndex, inputIndex];
+
+//   // // 繰り返す
+//   // prevTimeMs = timestampMs;
+//   // requestAnimationFrame(ts => loop(ts));
+//   // }
+
+//   // ループ開始
+//   // requestAnimationFrame(ts => loop(ts));
+// })();
