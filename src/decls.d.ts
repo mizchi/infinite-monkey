@@ -1,5 +1,1 @@
-/* === Ignore === */
-
-declare module "pngjs" {
-  export var PNG: any;
-}
+declare var $monkey: any;

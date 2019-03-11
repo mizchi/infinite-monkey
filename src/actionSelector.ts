@@ -1,32 +1,23 @@
-// ランダムにそれっぽく HTML を操作する puppeteer スクリプト
-//
-// Install an Run
-// $ yarn add ts-node puppeteer -D
-// $ yarn ts-node -T crawl.ts http://localhost:1234
-import "@babel/polyfill";
 import puppeteer from "puppeteer";
+import { toSelector, visitedUrlMap, parsedEntry } from "./utils";
+import { SerializedNode } from "./types";
 import { sample, range } from "lodash";
-import fs from "fs";
 import url from "url";
-declare var $monkey: any;
 
-const entryUrl = process.argv[2];
-const interval = 0;
-
-const parsedEntry = url.parse(entryUrl);
-// console.log("entryUrl", entryUrl);
-
-const visitedUrlMap: { [key: string]: boolean } = {};
-
-// type SerializedNode = [string, object, number[]];
-type SerializedNode = { tag: string; attrs: any; paths: number[] };
-const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
-
-function toSelector(paths: number[], root = "body") {
-  return paths.reduce(
-    (expr, next) => `${expr} > *:nth-child(${next + 1})`,
-    root
-  );
+export async function execAction(
+  page: puppeteer.Page,
+  allData: SerializedNode[]
+) {
+  const rand = Math.random();
+  if (rand < 0.7) {
+    // select prefered action
+    await execPreferredAction(page, allData);
+  } else if (rand < 0.6) {
+    const node = selectRandomNodeWithBias(allData);
+    await execActionByRandomNode(page, node, allData);
+  } else {
+    await execRandomAction(page, allData);
+  }
 }
 
 function selectRandomNodeWithBias(allNodes: SerializedNode[]): SerializedNode {
@@ -49,90 +40,6 @@ function selectRandomNodeWithBias(allNodes: SerializedNode[]): SerializedNode {
   }
 
   return sample(allNodes) as SerializedNode;
-}
-const logPath = __dirname + "/monkey.log";
-
-(async () => {
-  await fs.promises.unlink(logPath).catch(e => console.log("initialize"));
-
-  const browser = await puppeteer.launch({
-    headless: false,
-    devtools: true
-    // args: ["--no-sandbox"]
-  });
-
-  while (true) {
-    let currentPage: puppeteer.Page | null = null;
-    try {
-      currentPage = await browser.newPage();
-      await execActionUntilError(browser, currentPage);
-    } catch (error) {
-      // console.log("terminate with", error);
-      if (currentPage) {
-        const errorLog = `Terminate by error: ${currentPage.url()}: ${error.toString()} \n`;
-        await fs.promises.appendFile(logPath, errorLog);
-        // console.log("terminated by error", currentPage.url(), error);
-        currentPage.close();
-      }
-    }
-  }
-  browser.close();
-})();
-
-async function execActionUntilError(
-  browser: puppeteer.Browser,
-  page: puppeteer.Page
-) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      // setup pages
-      page.on("console", async msg => {
-        const args = msg.args();
-        for (let i = 0; i < args.length; ++i) {
-          const t = `${args[i]}`.replace(/^(JSHandle\:)/, "");
-          // Ignore react devtools prompt
-          if (
-            !t.includes("Download the React DevTools") &&
-            !(t.indexOf("font-weight:bold") > -1) &&
-            !(t.indexOf("JSHandle@array") > -1)
-          ) {
-            console.log("console:", t);
-          }
-        }
-      });
-      page.on("pageerror", async error => {
-        reject(error);
-      });
-      page.on("load", async () => {
-        const scriptText = `const __install = ${install.toString()};__install();`;
-        await page.evaluate(scriptText => {
-          eval(scriptText);
-        }, scriptText);
-      });
-      await page.goto(entryUrl);
-      await page.waitFor("body");
-
-      let cnt = 10000;
-      while (cnt--) {
-        await page.waitFor("body");
-        const parsed = url.parse(page.url());
-        if (parsed.hostname !== parsedEntry.hostname) {
-          reject(new Error(`Do not allow external hostname`));
-        }
-
-        visitedUrlMap[parsed.pathname as string] = true;
-
-        await ensurePageScript(page);
-        const nodes = await page.evaluate(() => {
-          return $monkey.serializeDomState();
-        });
-        await execAction(page, nodes);
-        await wait(interval);
-      }
-    } catch (error) {
-      reject(error);
-    }
-  });
 }
 
 async function fillInput(
@@ -216,20 +123,6 @@ function getChildNodes(node: SerializedNode, allNodes: SerializedNode[]) {
     const childPath = child.paths.join("/");
     return nodePath !== childPath && childPath.includes(nodePath);
   });
-}
-
-async function execAction(page: puppeteer.Page, allData: SerializedNode[]) {
-  const rand = Math.random();
-  // if (rand < 0.7) {
-  //   // select prefered action
-  //   await execPreferredAction(page, allData);
-  // } else
-  if (rand < 0.6) {
-    const node = selectRandomNodeWithBias(allData);
-    await execActionByRandomNode(page, node, allData);
-  } else {
-    await execRandomAction(page, allData);
-  }
 }
 
 async function execPreferredAction(
@@ -360,56 +253,10 @@ async function execActionByRandomNode(
     }
 
     case "button":
-    case "a": {
+    case "ex": {
       const selector = toSelector(node.paths);
       await page.click(selector);
       break;
     }
   }
-}
-
-async function ensurePageScript(page: puppeteer.Page) {
-  while (true) {
-    const installed = await page.evaluate(() => {
-      return typeof $monkey === "object";
-    });
-    if (installed) {
-      break;
-    } else {
-      await wait(32);
-    }
-  }
-}
-
-// eval in borwser scope
-function install() {
-  function serializeDomState() {
-    const results: SerializedNode[] = [];
-    function _walk(node: HTMLElement, paths: number[]) {
-      const attrs = Array.from(node.attributes).reduce(
-        (acc, attr) => ({ ...acc, [attr.nodeName]: attr.value }),
-        {}
-      );
-
-      results.push({ tag: node.tagName.toLowerCase(), attrs, paths });
-
-      if (node.childNodes && node.childNodes.length > 0) {
-        Array.from(node.childNodes)
-          // Drop Text Node
-          .filter(n => n instanceof HTMLElement)
-          .map((child, index) => {
-            _walk(child as HTMLElement, paths.concat([index]));
-          });
-      }
-    }
-
-    _walk(document.body, []);
-    return results;
-  }
-
-  const g: any = window;
-  g.$monkey = {
-    // execRandomAction,
-    serializeDomState
-  };
 }
