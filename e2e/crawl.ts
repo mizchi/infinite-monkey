@@ -91,7 +91,11 @@ async function execActionUntilError(
         for (let i = 0; i < args.length; ++i) {
           const t = `${args[i]}`.replace(/^(JSHandle\:)/, "");
           // Ignore react devtools prompt
-          if (!t.includes("Download the React DevTools")) {
+          if (
+            !t.includes("Download the React DevTools") &&
+            !(t.indexOf("font-weight:bold") > -1) &&
+            !(t.indexOf("JSHandle@array") > -1)
+          ) {
             console.log("console:", t);
           }
         }

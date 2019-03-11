@@ -37,9 +37,6 @@ export default function pixelmatch(
 // to shader
 function getDeltas(img1: Uint8Array, img2: Uint8Array) {
   const buf = new Float32Array(img1.length / 4);
-  // const inputToGL = new Uint8Array(img1.length * 2);
-  // inputToGL.copyWithin(img1, 0);
-  // inputToGL.copyWithin(img2, img1.length/2)
   for (let pos = 0; pos < buf.length; pos++) {
     buf[pos] = getDelta(img1, img2, pos);
   }
@@ -77,9 +74,15 @@ function getDelta(img1: Uint8Array, img2: Uint8Array, pos: number): number {
   }
 
   // yiq
-  const y = rgb2y(r1, g1, b1) - rgb2y(r2, g2, b2);
-  const i = rgb2i(r1, g1, b1) - rgb2i(r2, g2, b2);
-  const q = rgb2q(r1, g1, b1) - rgb2q(r2, g2, b2);
+  // const y = rgb2y(r1, g1, b1) - rgb2y(r2, g2, b2);
+  // const i = rgb2i(r1, g1, b1) - rgb2i(r2, g2, b2);
+  // const q = rgb2q(r1, g1, b1) - rgb2q(r2, g2, b2);
+
+  const y = rgb2y(r1 - r2, g1 - g2, b1 - b2);
+  const i = rgb2i(r1 - r2, g1 - g2, b1 - b2);
+  const q = rgb2q(r1 - r2, g1 - g2, b1 - b2);
+  // result = yiqMat * ( img1Px - img2Px )
+  // return (  vec3(0.5, 0.2, 0.19)  *result ).dot(result)
 
   // to vector
   return 0.5053 * y * y + 0.299 * i * i + 0.1957 * q * q;
