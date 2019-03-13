@@ -1,6 +1,6 @@
 {
   "name": "@mizchi/infinite-monkey",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "MIT",
   "bin": {
     "infinite-monkey": "bin/infinite-monkey"
@@ -10,6 +10,7 @@
     "build": "tsc -p ."
   },
   "devDependencies": {
+    "@types/debug": "^4.1.2",
     "@types/jest": "^23.3.9",
     "@types/lodash": "^4.14.120",
     "@types/puppeteer": "^1.12.1",
@@ -21,8 +22,10 @@
   "dependencies": {
     "@babel/polyfill": "^7.2.5",
     "@types/stacktrace-js": "^0.0.32",
+    "debug": "^4.1.1",
     "error-stack-parser": "^2.0.2",
     "lodash": "^4.17.11",
+    "minimist": "^1.2.0",
     "puppeteer": "^1.12.2",
     "stacktrace-js": "^2.0.0"
   },

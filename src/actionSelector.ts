@@ -10,7 +10,7 @@ export async function execAction(
 ) {
   const rand = Math.random();
   if (rand < 0.7) {
-    // select prefered action
+    // select pred action
     await execPreferredAction(page, allData);
   } else if (rand < 0.6) {
     const node = selectRandomNodeWithBias(allData);
@@ -125,6 +125,7 @@ function getChildNodes(node: SerializedNode, allNodes: SerializedNode[]) {
   });
 }
 
+// todo select unvisited action
 async function execPreferredAction(
   page: puppeteer.Page,
   allData: SerializedNode[]
@@ -132,7 +133,7 @@ async function execPreferredAction(
   const anchorNodes = allData.filter(node => node.tag === "a");
   const node = anchorNodes.find(node => {
     const anchorHrefParsed = url.parse(node.attrs.href);
-    console.log(anchorHrefParsed);
+    // console.log(anchorHrefParsed);
     const isPathnameVisited = !!visitedUrlMap[parsedEntry.pathname as string];
     return (
       // 相対パス
@@ -142,9 +143,9 @@ async function execPreferredAction(
     );
   });
 
-  if (node) {
-    console.log("selected node", node);
-  }
+  // if (node) {
+  //   console.log("selected node", node);
+  // }
   if (node) {
     await page.click(toSelector(node.paths));
   } else {
@@ -178,16 +179,20 @@ async function dragAndDropRandom(
     const e = (await page.$(
       toSelector(randomNode.paths)
     )) as puppeteer.ElementHandle<Element>;
-    const box = (await e.boundingBox()) as puppeteer.BoundingBox;
-    await page.mouse.move(
-      box.x + box.width * Math.random(),
-      box.y + box.height * Math.random()
-    );
-    await page.mouse.down();
-    await page.mouse.move(
-      box.x + box.width * Math.random(),
-      box.y + box.height * Math.random()
-    ); // move to (100, 200) coordinates
+    const box = await e.boundingBox();
+
+    if (box) {
+      await page.mouse.move(
+        box.x + box.width * Math.random(),
+        box.y + box.height * Math.random()
+      );
+      await page.mouse.down();
+      await page.mouse.move(
+        box.x + box.width * Math.random(),
+        box.y + box.height * Math.random()
+      ); // move to (100, 200) coordinates
+    }
+
     await page.mouse.up();
   }
 }
